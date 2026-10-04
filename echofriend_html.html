@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoFriend - Open-Source Speech Translator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 flex flex-col overflow-x-hidden">
+
+    <header class="w-full border-b border-slate-200 dark:border-slate-800 glass-panel sticky top-0 z-50 px-4 lg:px-8 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight flex items-center gap-2">
+                    EchoFriend <span class="text-xs bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">Open-Source AI</span>
+                </h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Built for Grandpa & Friends — 100% Offline Capable</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="openSettingsModal()" class="hidden sm:flex items-center space-x-2 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition">
+                <span id="modelStatusIndicator" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="modelStatusText" class="font-medium">Web Speech + Ollama</span>
+                <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400 ml-1"></i>
+            </button>
+
+            <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300">
+                <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+
+            <button onclick="openSettingsModal()" class="sm:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto">
+        
+        <!-- Left Panel: Translator Console (8 Cols) -->
+        <div class="lg:col-span-8 flex flex-col space-y-6">
+            
+            <!-- Friend Profile Banner -->
+            <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-emerald-500 text-white rounded-xl shadow-md">
+                        <i data-lucide="heart" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Active Friend Profile: <span id="currentFriendName" class="underline">Grandpa Joe's Medical & Daily Chat</span></h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-400">Optimized for high contrast and custom local terminology.</p>
+                    </div>
+                </div>
+                <button onclick="openFriendModal()" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 font-medium transition shadow-xs">
+                    Change Friend
+                </button>
+            </div>
+
+            <!-- Language Selector Bar -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="w-full sm:w-5/12 flex flex-col space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <i data-lucide="globe" class="w-3.5 h-3.5"></i> You Speak (Source)
+                    </label>
+                    <select id="sourceLang" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="en-US">English (United States)</option>
+                        <option value="es-ES">Spanish (Español)</option>
+                        <option value="fr-FR">French (Français)</option>
+                        <option value="de-DE">German (Deutsch)</option>
+                        <option value="ja-JP">Japanese (日本語)</option>
+                    </select>
+                </div>
+
+                <button onclick="swapLanguages()" class="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition mt-4 sm:mt-0 self-center">
+                    <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                </button>
+
+                <div class="w-full sm:w-5/12 flex flex-col space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Friend Hears (Target)
+                    </label>
+                    <select id="targetLang" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="es-ES">Spanish (Español)</option>
+                        <option value="en-US">English (United States)</option>
+                        <option value="fr-FR">French (Français)</option>
+                        <option value="de-DE">German (Deutsch)</option>
+                        <option value="ja-JP">Japanese (日本語)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Translation Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative min-h-[220px]">
+                    <div>
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold tracking-wide uppercase text-slate-400">Original Transcript</span>
+                            <button onclick="clearSource()" class="text-xs text-slate-400 hover:text-red-500 transition">Clear</button>
+                        </div>
+                        <textarea id="sourceText" placeholder="Tap microphone and speak, or type here..." class="w-full mt-3 bg-transparent text-slate-800 dark:text-slate-100 text-lg font-medium resize-none focus:outline-none min-h-[100px]"></textarea>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <span id="recordingStatus" class="text-xs text-slate-400">Ready to listen</span>
+                        <button onclick="copyToClipboard('sourceText')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition" title="Copy">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50/50 dark:bg-slate-900/90 border-2 border-emerald-500/30 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative min-h-[220px]">
+                    <div>
+                        <div class="flex items-center justify-between pb-3 border-b border-emerald-500/20 dark:border-slate-800">
+                            <span class="text-xs font-bold tracking-wide uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Translated Output
+                            </span>
+                            <button onclick="increaseFontSize()" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-slate-800 text-emerald-800 dark:text-emerald-200 font-bold" title="Toggle Large Text">A+</button>
+                        </div>
+                        <div id="targetText" class="w-full mt-3 text-slate-900 dark:text-white text-2xl font-bold min-h-[100px] break-words">
+                            <span class="text-slate-400 dark:text-slate-600 text-base font-normal">Translation will appear here instantly...</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-emerald-500/20 dark:border-slate-800">
+                        <span class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">Local AI / Web API Engine</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="copyToClipboard('targetText')" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-600 dark:text-slate-300 transition" title="Copy">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="speakTranslation()" class="p-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition shadow-md shadow-emerald-500/20" title="Speak Aloud">
+                                <i data-lucide="volume-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Central Record Button Control -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md flex flex-col items-center justify-center space-y-4">
+                <div class="relative flex items-center justify-center">
+                    <div id="micPulseRing" class="absolute w-24 h-24 rounded-full bg-emerald-400/20 dark:bg-emerald-500/20 hidden animate-pulse-ring"></div>
+                    <button id="recordBtn" onclick="toggleRecord()" class="relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white flex items-center justify-center shadow-xl shadow-emerald-500/30 transition transform hover:scale-105 active:scale-95">
+                        <i id="recordIcon" data-lucide="mic" class="w-8 h-8"></i>
+                    </button>
+                </div>
+                <div class="text-center">
+                    <p id="recordStateLabel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tap to Start Voice Translation</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Powered by Web Speech API & Open-Source Ollama Support</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Panel: Quick Phrases & History -->
+        <div class="lg:col-span-4 flex flex-col space-y-6">
+            
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                        <i data-lucide="bookmark" class="w-4 h-4 text-emerald-500"></i> Quick Friend Phrases
+                    </h3>
+                    <span class="text-xs text-slate-400">Tap to translate</span>
+                </div>
+                <div id="quickPhrasesContainer" class="grid grid-cols-1 gap-2"></div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col space-y-3 flex-1 min-h-[250px]">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                        <i data-lucide="history" class="w-4 h-4 text-emerald-500"></i> Recent Translations
+                    </h3>
+                    <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-red-500 transition">Clear All</button>
+                </div>
+                <div id="historyList" class="flex-1 overflow-y-auto space-y-2.5 max-h-[280px] pr-1"></div>
+            </div>
+
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 shadow-md flex flex-col space-y-3">
+                <div class="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i> Why Open Innovation Matters
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    By leveraging open-weight models and standard web APIs, personal medical and family conversations remain private on your local device.
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <div id="settingsModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-base font-bold flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-emerald-500"></i> AI & Translation Settings
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="space-y-4 text-sm">
+                <div class="flex flex-col space-y-1.5">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">Translation Engine</label>
+                    <select id="engineSelect" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5">
+                        <option value="webspeech">Standard Web Speech + Offline Dictionary</option>
+                        <option value="ollama">Local Ollama / Open-Weight LLM (Llama 3 / Mistral)</option>
+                    </select>
+                </div>
+
+                <div id="ollamaConfigBox" class="flex flex-col space-y-1.5 hidden">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">Ollama Local Endpoint URL</label>
+                    <input type="text" id="ollamaUrl" value="http://localhost:11434" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5">
+                </div>
+
+                <div class="flex flex-col space-y-1.5">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">Speech Rate</label>
+                    <input type="range" id="speechRate" min="0.5" max="1.5" step="0.1" value="1.0" class="accent-emerald-500">
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button onclick="saveSettings()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-xl shadow-md transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="friendModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-base font-bold flex items-center gap-2">
+                    <i data-lucide="heart" class="w-5 h-5 text-emerald-500"></i> Choose Friend Profile
+                </h3>
+                <button onclick="closeFriendModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="space-y-3">
+                <div onclick="selectFriendProfile('grandpa')" class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 cursor-pointer transition flex items-center space-x-3 bg-slate-50 dark:bg-slate-800/50">
+                    <div class="p-2.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-lg"><i data-lucide="user" class="w-5 h-5"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Grandpa Joe (Medical & Daily)</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Spanish ↔ English with medical terminology</p>
+                    </div>
+                </div>
+                <div onclick="selectFriendProfile('roommate')" class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 cursor-pointer transition flex items-center space-x-3 bg-slate-50 dark:bg-slate-800/50">
+                    <div class="p-2.5 bg-teal-100 dark:bg-teal-950 text-teal-600 rounded-lg"><i data-lucide="home" class="w-5 h-5"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Roommate Mateo (Groceries & Chores)</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">French ↔ English everyday casual</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-medium border border-slate-800">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toastMsg">Action completed successfully</span>
+    </div>
+
+    <!-- External JavaScript Script -->
+    <script src="script.js"></script>
+</body>
+</html>
